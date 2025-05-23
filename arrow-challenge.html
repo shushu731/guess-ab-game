@@ -46,7 +46,7 @@
 
     /* 手機版控制按鈕區 */
     .mobile-controls {
-      display: none; /* 預設不顯示，只有手機顯示 */
+      display: block; /* ✅ 改為永遠顯示 */
       margin-top: 20px;
     }
 
@@ -69,20 +69,24 @@
     /* 答題鍵 */
     .submit-btn {
       margin-top: 10px;
-      width: 100%;
-      font-size: 18px;
-      padding: 10px;
+      width: 300px;
+      font-size: 50px;
+      padding: 50px;
       background-color: #fdd;
       border-radius: 6px;
       border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
     }
 
-    /* ✅ 僅在手機寬度顯示 */
+    /* ✅ 僅在手機寬度顯示 
     @media (max-width: 768px) {
     .mobile-controls {
       display: block;
     }
-    }
+    }*/
 
 
   </style>
