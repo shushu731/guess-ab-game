@@ -85,11 +85,12 @@
   </div>
   <div class="controls">
     <button onclick="toggleFlagMode()">🔁 切換插旗模式</button>
-    <button onclick="clearRecords()">🗑️ 清除所有紀錄</button>
+    
   </div>
   <div id="board"></div>
   <div id="status"></div>
   <div class="record" id="record"></div>
+  <button onclick="clearRecords()">🗑️ 清除所有紀錄</button>
   <a href="index.html" class="back-home">🏠 回首頁</a>
 
   <script>
@@ -102,6 +103,45 @@
     let width = 0, height = 0;
     let startTime;
     let currentKey = '';
+
+
+
+
+
+
+
+
+    function autoRevealAroundNumber(x, y) {
+  const cell = board[y][x];
+  if (!cell.classList.contains('revealed')) return;
+  const num = parseInt(cell.textContent);
+  let flagCount = 0;
+  let unrevealed = [];
+
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const ny = y + dy, nx = x + dx;
+      if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+        const neighbor = board[ny][nx];
+        if (neighbor.classList.contains('flag')) flagCount++;
+        if (!neighbor.classList.contains('revealed') && !neighbor.classList.contains('flag')) {
+          unrevealed.push([nx, ny]);
+        }
+      }
+    }
+  }
+
+  if (flagCount === num) {
+    for (const [nx, ny] of unrevealed) {
+      reveal(nx, ny);
+    }
+  }
+}
+
+
+
+
+
 
     function startGame(w, h, mines) {
       width = w;
@@ -157,6 +197,16 @@
       if (gameOver) return;
       const x = +e.target.dataset.x;
       const y = +e.target.dataset.y;
+
+
+
+      if (board[y][x].classList.contains('revealed') && board[y][x].textContent.match(/^[1-8]$/)) {
+  autoRevealAroundNumber(x, y);
+  return;
+      }
+
+
+
 
       if (flagMode || e.target.classList.contains('flag')) {
         toggleFlag(x, y);
