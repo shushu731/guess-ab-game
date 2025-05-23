@@ -111,12 +111,14 @@
 
 <div class="mobile-controls">
   <div class="mobile-direction">
-    <button onclick="simulateKey('ArrowUp')">↑</button>
-  </div>
-  <div class="mobile-direction">
-    <button onclick="simulateKey('ArrowLeft')">←</button>
-    <button onclick="simulateKey('ArrowDown')">↓</button>
-    <button onclick="simulateKey('ArrowRight')">→</button>
+    <div style="text-align: center; width: 100%;">
+      <button onclick="simulateKey('ArrowUp')">↑</button>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 10px;">
+      <button onclick="simulateKey('ArrowLeft')">←</button>
+      <button onclick="simulateKey('ArrowDown')">↓</button>
+      <button onclick="simulateKey('ArrowRight')">→</button>
+    </div>
   </div>
   <button class="submit-btn" onclick="checkAnswer()">✅ 送出</button>
 </div>
