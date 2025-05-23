@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>舒靜的踩地雷遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #fff8f0;
+      padding: 20px;
+      text-align: left;
+    }
+    h1 {
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .menu, .controls {
+      margin: 10px 0;
+      text-align: left;
+    }
+    .menu button, .controls button {
+      margin-right: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #ffd9e6;
+      cursor: pointer;
+    }
+    .menu button:hover, .controls button:hover {
+      background-color: #fcb4cc;
+    }
+    #board {
+      display: grid;
+      gap: 2px;
+      margin: 20px 0;
+      width: fit-content;
+    }
+    .cell {
+      width: 28px;
+      height: 28px;
+      background-color: #eee;
+      text-align: center;
+      line-height: 28px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      user-select: none;
+    }
+    .cell.revealed {
+      background-color: #ddd;
+    }
+    .cell.flag {
+      background-color: #ffe6e6;
+      color: red;
+    }
+    .cell.mine {
+      background-color: #ffdddd;
+    }
+    .record {
+      font-size: 14px;
+      color: #444;
+      margin-top: 10px;
+    }
+    .back-home {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      background-color: #d8b4f8;
+      color: #000;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-home:hover {
+      background-color: #c084fc;
+    }
+  </style>
+</head>
+<body>
+  <h1>舒靜的踩地雷遊戲 🧨</h1>
+  <div class="menu">
+    <button onclick="startGame(9, 9, 10)">9x9（簡單）</button>
+    <button onclick="startGame(12, 12, 20)">12x12（普通）</button>
+    <button onclick="startGame(16, 16, 40)">16x16（困難）</button>
+  </div>
+  <div class="controls">
+    <button onclick="toggleFlagMode()">🔁 切換插旗模式</button>
+    <button onclick="clearRecords()">🗑️ 清除所有紀錄</button>
+  </div>
+  <div id="board"></div>
+  <div id="status"></div>
+  <div class="record" id="record"></div>
+  <a href="index.html" class="back-home">🏠 回首頁</a>
+
+  <script>
+    let board = [];
+    let mineMap = [];
+    let revealedCount = 0;
+    let gameOver = false;
+    let flagMode = false;
+    let mineCount = 0;
+    let width = 0, height = 0;
+    let startTime;
+    let currentKey = '';
+
+    function startGame(w, h, mines) {
+      width = w;
+      height = h;
+      mineCount = mines;
+      board = [];
+      mineMap = [];
+      revealedCount = 0;
+      gameOver = false;
+      flagMode = false;
+      currentKey = `record_${w}x${h}`;
+
+      const boardDiv = document.getElementById('board');
+      const status = document.getElementById('status');
+      boardDiv.innerHTML = '';
+      status.innerHTML = '';
+      boardDiv.style.gridTemplateColumns = `repeat(${w}, 1fr)`;
+
+      for (let y = 0; y < h; y++) {
+        board[y] = [];
+        mineMap[y] = [];
+        for (let x = 0; x < w; x++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+          cell.addEventListener('click', handleClick);
+          cell.addEventListener('contextmenu', handleRightClick);
+          cell.addEventListener('touchstart', handleTouchStart, { passive: false });
+          board[y][x] = cell;
+          mineMap[y][x] = 0;
+          boardDiv.appendChild(cell);
+        }
+      }
+
+      placeMines(mines);
+      startTime = Date.now();
+    }
+
+    function placeMines(mines) {
+      let placed = 0;
+      while (placed < mines) {
+        let x = Math.floor(Math.random() * width);
+        let y = Math.floor(Math.random() * height);
+        if (mineMap[y][x] === 0) {
+          mineMap[y][x] = 'M';
+          placed++;
+        }
+      }
+    }
+
+    function handleClick(e) {
+      if (gameOver) return;
+      const x = +e.target.dataset.x;
+      const y = +e.target.dataset.y;
+
+      if (flagMode || e.target.classList.contains('flag')) {
+        toggleFlag(x, y);
+        return;
+      }
+      reveal(x, y);
+    }
+
+    function handleRightClick(e) {
+      e.preventDefault();
+      if (gameOver) return;
+      const x = +e.target.dataset.x;
+      const y = +e.target.dataset.y;
+      toggleFlag(x, y);
+    }
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 1) {
+        const target = e.target;
+        let timeout = setTimeout(() => {
+          const x = +target.dataset.x;
+          const y = +target.dataset.y;
+          toggleFlag(x, y);
+        }, 500);
+        target.addEventListener('touchend', () => clearTimeout(timeout), { once: true });
+      }
+    }
+
+    function toggleFlag(x, y) {
+      const cell = board[y][x];
+      if (cell.classList.contains('revealed')) return;
+      cell.classList.toggle('flag');
+      cell.textContent = cell.classList.contains('flag') ? '🚩' : '';
+    }
+
+    function reveal(x, y) {
+      const cell = board[y][x];
+      if (cell.classList.contains('revealed') || cell.classList.contains('flag')) return;
+
+      cell.classList.add('revealed');
+      if (mineMap[y][x] === 'M') {
+        cell.classList.add('mine');
+        cell.textContent = '💣';
+        endGame(false);
+        return;
+      }
+
+      const count = countMinesAround(x, y);
+      cell.textContent = count || '';
+      revealedCount++;
+
+      if (count === 0) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+              reveal(nx, ny);
+            }
+          }
+        }
+      }
+
+      if (revealedCount === width * height - mineCount) {
+        endGame(true);
+      }
+    }
+
+    function countMinesAround(x, y) {
+      let count = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            if (mineMap[ny][nx] === 'M') count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    function endGame(success) {
+      gameOver = true;
+      const status = document.getElementById('status');
+      const time = Math.floor((Date.now() - startTime) / 1000);
+      if (success) {
+        status.innerText = `🎉 恭喜完成！用時 ${time} 秒。`;
+        saveRecord(`${time} 秒`);
+      } else {
+        status.innerText = `💥 你踩到地雷了！`;
+        saveRecord(`失敗`);
+        // 展示所有地雷
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            if (mineMap[y][x] === 'M') {
+              const cell = board[y][x];
+              if (!cell.classList.contains('revealed')) {
+                cell.classList.add('revealed', 'mine');
+                cell.textContent = '💣';
+              }
+            }
+          }
+        }
+      }
+      updateRecords();
+    }
+
+    function toggleFlagMode() {
+      flagMode = !flagMode;
+      const btns = document.querySelectorAll('.controls button');
+      btns[0].textContent = flagMode ? '📍 插旗模式中' : '🔁 切換插旗模式';
+    }
+
+    function saveRecord(result) {
+      let data = JSON.parse(localStorage.getItem(currentKey)) || [];
+      data.push(result);
+      localStorage.setItem(currentKey, JSON.stringify(data));
+    }
+
+    function updateRecords() {
+      const out = document.getElementById('record');
+      let html = '<strong>📊 歷史紀錄：</strong><ul>';
+      ['9x9', '12x12', '16x16'].forEach(key => {
+        const data = JSON.parse(localStorage.getItem(`record_${key}`)) || [];
+        data.forEach(item => {
+          html += `<li>(${key}) ${item}</li>`;
+        });
+      });
+      html += '</ul>';
+      out.innerHTML = html;
+    }
+
+    function clearRecords() {
+      ['9x9', '12x12', '16x16'].forEach(key => localStorage.removeItem(`record_${key}`));
+      document.getElementById('record').innerHTML = '';
+      document.getElementById('status').innerText = '🗑️ 所有紀錄已清除';
+    }
+  </script>
+</body>
+</html>
