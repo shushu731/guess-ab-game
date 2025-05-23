@@ -6,8 +6,18 @@
 
   <!-- CSS：設定基本樣式 -->
   <style>
-    body { font-family: sans-serif; padding: 20px; }
+    body 
+    {
+    font-family: sans-serif; 
+    padding: 20px; 
+    word-break: break-word; /* 加這一行讓字遇到邊界會自動換行 */
+    }
     input { margin-right: 10px; }
+
+    #result {
+    max-width: 100%;        /* 不讓內容超出畫面 */
+    word-wrap: break-word;  /* 如果太長會自動換行 */
+    }
   </style>
 </head>
 <body>
