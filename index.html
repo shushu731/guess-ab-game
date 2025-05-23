@@ -141,20 +141,25 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
+  const x = touch.pageX - rect.left - window.scrollX;
+  const y = touch.pageY - rect.top - window.scrollY;
   canvas.dispatchEvent(new MouseEvent("mousedown", {
-    clientX: touch.clientX - rect.left,
-    clientY: touch.clientY - rect.top
+    clientX: x,
+    clientY: y
   }));
 });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
+  const x = touch.pageX - rect.left - window.scrollX;
+  const y = touch.pageY - rect.top - window.scrollY;
   canvas.dispatchEvent(new MouseEvent("mousemove", {
-    clientX: touch.clientX - rect.left,
-    clientY: touch.clientY - rect.top
+    clientX: x,
+    clientY: y
   }));
 });
+
 canvas.addEventListener('touchend', () => drawing = false);
 
 function startDraw(e) {
