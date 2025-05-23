@@ -36,6 +36,12 @@
   <!-- 顯示歷史紀錄 -->
   <div id="history"></div>
 
+
+  <h3>✏️ 手繪筆記區</h3>
+    <canvas id="drawArea" width="300" height="300" style="border:1px solid #000;"></canvas><br>
+    <button onclick="clearCanvas()">清除畫面</button>
+
+
   <!-- JavaScript：遊戲邏輯 -->
   <script>
 
@@ -113,6 +119,65 @@
 }
 
 
+
+
+
+
+
+
+
+// 🖌️ 繪圖功能
+const canvas = document.getElementById('drawArea');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
+
+// 手指支援（手機）
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new MouseEvent("mousedown", {
+    clientX: touch.clientX - rect.left,
+    clientY: touch.clientY - rect.top
+  }));
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new MouseEvent("mousemove", {
+    clientX: touch.clientX - rect.left,
+    clientY: touch.clientY - rect.top
+  }));
+});
+canvas.addEventListener('touchend', () => drawing = false);
+
+function startDraw(e) {
+  drawing = true;
+  draw(e);
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+  ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+}
 
 
 
