@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>猜數字幾A幾B</title>
+
+  <!-- CSS：設定基本樣式 -->
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <!-- 標題區域 -->
+  <h2>猜 4 位不重複數字（A為數字對位置對，B為數字對位置不對）</h2>
+
+  <!-- 使用者輸入框與送出按鈕 -->
+  <input type="text" id="guess" maxlength="4">
+  <button onclick="checkGuess()">送出</button>
+  <button onclick="restartGame()">重新開始</button>
+
+
+  <!-- 顯示「猜對了」結果的地方 -->
+  <div id="result"></div>
+
+  <!-- 顯示歷史紀錄 -->
+  <div id="history"></div>
+
+  <!-- JavaScript：遊戲邏輯 -->
+  <script>
+
+    let guessCount = 0; // 猜的次數
+
+    // 隨機產生 4 個不重複的數字當作答案
+    let answer = generateAnswer();
+
+    function generateAnswer() {
+      let nums = [];
+      while (nums.length < 4) {
+        let n = Math.floor(Math.random() * 10); // 產生 0～9 的亂數
+        if (!nums.includes(n)) nums.push(n);   // 確保不重複才加進去
+      }
+      return nums.join(''); // 回傳字串型式的答案，例如 "7381"
+    }
+
+    // 檢查使用者猜的數字並計算幾A幾B
+    function checkGuess() {
+      const input = document.getElementById('guess').value;
+      guessCount++; // 每猜一次就加一
+
+      // 驗證輸入格式：長度必須是4、且不得有重複數字
+      if (input.length !== 4 || new Set(input).size !== 4) {
+        alert('請輸入 4 個不重複的數字');    //alert會跳出提示視窗
+        return;
+      }
+
+      let A = 0, B = 0;
+
+      // 計算幾A幾B
+      for (let i = 0; i < 4; i++) {
+        if (input[i] === answer[i]) A++;              // 數字與位置都對 → A
+        else if (answer.includes(input[i])) B++;      // 數字對但位置不對 → B
+      }
+
+      // 顯示結果到畫面上
+      const result = `${input} → ${A}A${B}B`;
+      document.getElementById('history').innerHTML += `<div>${result}</div>`;
+
+      // 如果猜對，顯示成功訊息
+      if (A === 4) {
+        document.getElementById('result').innerHTML = `<strong>答對啦！答案是 ${answer}，你總共猜了 ${guessCount} 次！</strong>`;
+
+        // 讓輸入框無法再輸入
+        document.getElementById('guess').disabled = true;
+
+        // 讓送出按鈕也不能再按
+        document.querySelector('button').disabled = true;
+
+      }
+
+      // 每次猜完都清空輸入框
+        document.getElementById('guess').value = '';
+
+    }
+
+
+
+
+    function restartGame() {
+        guessCount = 0;
+
+  // 重新產生答案
+  answer = generateAnswer();
+
+  // 清空輸入框、結果、歷史紀錄
+  document.getElementById('guess').value = '';
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('history').innerHTML = '';
+
+  // 恢復輸入與按鈕功能
+  document.getElementById('guess').disabled = false;
+  document.querySelector('button').disabled = false;
+}
+
+
+
+
+
+  </script>
+</body>
+</html>
