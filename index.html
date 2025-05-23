@@ -22,7 +22,7 @@
 </head>
 <body>
   <!-- 標題區域 -->
-  <h2>猜 4 位不重複數字（A為數字對位置對，B為數字對位置不對）</h2>
+  <h2>猜 4 位不重複數字<br>（A為數字對位置對，<br>B為數字對位置不對）</h2>
 
   <!-- 使用者輸入框與送出按鈕 -->
   <input type="text" id="guess" maxlength="4">
@@ -78,7 +78,7 @@
 
       // 如果猜對，顯示成功訊息
       if (A === 4) {
-        document.getElementById('result').innerHTML = `<strong>答對啦！答案是 ${answer}，你總共猜了 ${guessCount} 次！</strong>`;
+        document.getElementById('result').innerHTML = `<strong>答對啦！<br>答案是 ${answer}，<br>你總共猜了 ${guessCount} 次！</strong>`;
 
         // 讓輸入框無法再輸入
         document.getElementById('guess').disabled = true;
