@@ -79,14 +79,24 @@
 <body>
   <h1>舒靜的踩地雷遊戲 🧨</h1>
   <div class="menu">
-    <button onclick="startGame(9, 9, 10)">9x9（簡單）</button>
-    <button onclick="startGame(12, 12, 20)">12x12（普通）</button>
-    <button onclick="startGame(16, 16, 40)">16x16（困難）</button>
+    <button onclick="startGame(9, 9, 10)">9x9（簡單10顆地雷）</button>
+    <button onclick="startGame(12, 12, 20)">12x12（普通20顆地雷）</button>
+    <button onclick="startGame(16, 16, 40)">16x16（困難40顆地雷）</button>
   </div>
   <div class="controls">
     <button onclick="toggleFlagMode()">🔁 切換插旗模式</button>
     
   </div>
+
+
+  <div id="info" style="margin: 10px 0; font-size: 16px;">
+  💣 地雷數：<span id="totalMines">0</span>　
+  🚩 已插旗：<span id="flagCount">0</span>　
+  🎯 剩餘地雷：<span id="remainingMines">0</span>
+</div>
+
+
+
   <div id="board"></div>
   <div id="status"></div>
   <div class="record" id="record"></div>
@@ -153,6 +163,13 @@
       gameOver = false;
       flagMode = false;
       currentKey = `record_${w}x${h}`;
+
+
+      document.getElementById('totalMines').textContent = mines;
+      document.getElementById('flagCount').textContent = 0;
+      document.getElementById('remainingMines').textContent = mines;
+
+
 
       const boardDiv = document.getElementById('board');
       const status = document.getElementById('status');
@@ -240,7 +257,16 @@
       if (cell.classList.contains('revealed')) return;
       cell.classList.toggle('flag');
       cell.textContent = cell.classList.contains('flag') ? '🚩' : '';
+
+
+      // ✅ 更新旗子統計
+      const flags = document.querySelectorAll('.cell.flag').length;
+      document.getElementById('flagCount').textContent = flags;
+      document.getElementById('remainingMines').textContent = mineCount - flags;
     }
+
+
+    
 
     function reveal(x, y) {
       const cell = board[y][x];
