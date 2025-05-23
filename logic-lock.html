@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>邏輯解鎖遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #fefefe;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    input {
+      width: 80px;
+      padding: 4px;
+      font-size: 16px;
+    }
+    button {
+      padding: 5px 10px;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+    .hint {
+      background: #eee;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .log {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+    }
+    canvas {
+      border: 1px solid #aaa;
+      margin-top: 20px;
+    }
+
+.back-home {
+  margin-top: 20px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #d8b4f8;
+  color: #000;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+}
+.back-home:hover {
+  background-color: #c084fc;
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>🔐 邏輯解鎖遊戲</h1>
+  <div class="hint">
+    <p>提示：</p>
+    <ul id="hints"></ul>
+  </div>
+
+  <div>
+    <label for="guess">猜密碼（3位數）：</label>
+    <input type="text" id="guess" maxlength="3">
+    <button onclick="checkGuess()">送出</button>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <h3>📝 筆記區</h3>
+  <canvas id="drawArea" width="300" height="300"></canvas>
+  <br><button onclick="clearCanvas()">清除畫面</button>
+  <a href="index.html" class="back-home">🏠 回首頁</a>
+
+  <script>
+    let answer = '';
+    let hintData = [];
+
+    function startNewGame() {
+      answer = generateAnswer();
+      hintData = generateHints(answer);
+
+      const hintsList = document.getElementById("hints");
+      const log = document.getElementById("log");
+      hintsList.innerHTML = '';
+      log.innerHTML = '';
+      document.getElementById("guess").value = '';
+
+      hintData.forEach(h => {
+        const li = document.createElement("li");
+        li.textContent = `${h.input} → ${h.hint}`;
+        hintsList.appendChild(li);
+      });
+    }
+
+    function generateAnswer() {
+      const digits = [];
+      while (digits.length < 3) {
+        let d = Math.floor(Math.random() * 10).toString();
+        if (!digits.includes(d)) digits.push(d);
+      }
+      return digits.join("");
+    }
+
+    function generateHints(answer) {
+      const hints = [];
+      while (hints.length < 3) {
+        let input = generateAnswer();
+        if (input === answer || hints.find(h => h.input === input)) continue;
+        hints.push({ input, hint: getHint(input, answer) });
+      }
+      return hints;
+    }
+
+    function getHint(input, answer) {
+      let correctPos = 0, correctNum = 0;
+      for (let i = 0; i < 3; i++) {
+        if (input[i] === answer[i]) correctPos++;
+        else if (answer.includes(input[i])) correctNum++;
+      }
+      return `${correctPos}個正確位置, ${correctNum}個正確數字`; 
+    }
+
+    function checkGuess() {
+      const input = document.getElementById("guess").value;
+      if (!/^[0-9]{3}$/.test(input) || new Set(input).size !== 3) {
+        alert("請輸入3位不重複的數字");
+        return;
+      }
+      const result = getHint(input, answer);
+      const div = document.createElement("div");
+      div.textContent = `${input} → ${result}`;
+      document.getElementById("log").appendChild(div);
+      if (input === answer) {
+        setTimeout(() => {
+          alert("🎉 恭喜你破解密碼！密碼是：" + answer + "\n我們來挑戰下一題！");
+          startNewGame();
+        }, 100);
+      }
+    }
+
+    startNewGame();
+
+    // 🖌️ 繪圖功能
+    const canvas = document.getElementById('drawArea');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      drawing = true;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!drawing) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    });
+
+    canvas.addEventListener('touchend', () => {
+      drawing = false;
+    });
+
+    function startDraw(e) {
+      drawing = true;
+      draw(e);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+    }
+  </script>
+</body>
+</html>
