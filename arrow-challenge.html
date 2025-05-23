@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>箭頭挑戰遊戲</title>
   <style>
     body {
@@ -11,7 +10,7 @@
       padding: 20px;
       background-color: #fefefe;
     }
-    input {
+    input[type="number"] {
       width: 60px;
       font-size: 16px;
       margin-right: 10px;
@@ -23,6 +22,11 @@
     #question {
       font-size: 32px;
       margin: 20px 0;
+    }
+    #answerInput {
+      width: 300px;
+      font-size: 24px;
+      margin-top: 10px;
     }
     #result {
       margin-top: 20px;
@@ -46,54 +50,13 @@
       background-color: #c084fc;
     }
 
-    /* 手機版控制按鈕區 */
-    .mobile-controls {
-      display: block; /* ✅ 改為永遠顯示 */
+    canvas#controlCanvas {
       margin-top: 20px;
-      text-align: left;
-    }
-
-    .mobile-controls button {
-      width: 200px;      /* ✅ 控制按鈕寬度 */
-      height: 200px;     /* ✅ 控制按鈕高度 */
-      font-size: 50px;  /* ✅ 控制箭頭字體大小 */
-      margin: 5px;
-      
-      border-radius: 8px;
-      
-    }
-
-    /* 上下左右排列 */
-    .mobile-direction {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    /* 答題鍵 */
-    .submit-btn {
-      margin-top: 10px;
-      width: 300px;
-      font-size: 50px;
-      padding: 50px;
-      background-color: #fdd;
-      border-radius: 6px;
-      border: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
-
-    /* ✅ 僅在手機寬度顯示 
-    @media (max-width: 768px) {
-    .mobile-controls {
       display: block;
+      background-color: #eee;
+      border: 2px solid #999;
+      touch-action: manipulation;
     }
-    }*/
-
-
   </style>
 </head>
 <body>
@@ -106,34 +69,15 @@
     <button onclick="giveUp()">放棄</button>
     <button onclick="clearHistory()">清除紀錄</button>
     <a href="index.html" class="back-home">🏠 回首頁</a>
-    
   </div>
 
   <div id="question"></div>
-  <input id="answerInput" type="text" placeholder="輸入↑↓←→" autocomplete="off" style="width: 300px; font-size: 24px;">
+  <input id="answerInput" type="text" placeholder="輸入↑↓←→" autocomplete="off">
   <div id="result"></div>
   <div id="history"></div>
 
-
-
-
-
-<div class="mobile-controls">
-  <div class="mobile-direction">
-    <div style="text-align: center; width: 100%;">
-      <button onclick="simulateKey('ArrowUp')">↑</button>
-    </div>
-    <div style="display: flex; justify-content: center; gap: 10px;">
-      <button onclick="simulateKey('ArrowLeft')">←</button>
-      <button onclick="simulateKey('ArrowDown')">↓</button>
-      <button onclick="simulateKey('ArrowRight')">→</button>
-    </div>
-  </div>
-  <button class="submit-btn" onclick="checkAnswer()">✅ 送出</button>
-</div>
-
-
-
+  <!-- Canvas 控制區 -->
+  <canvas id="controlCanvas" width="300" height="300"></canvas>
 
   <script>
     const arrowMap = {
@@ -159,35 +103,24 @@
     const historyDiv = document.getElementById('history');
 
     document.addEventListener('keydown', e => {
-  if (!questions.length) return;
-
-  // ✅ 按方向鍵或 WASD 時處理輸入
-  if (arrowMap.hasOwnProperty(e.key)) {
-    e.preventDefault(); // 先阻止預設行為
-    const symbol = arrowMap[e.key];
-    input.value += symbol;
-
-    const currentAnswer = input.value;
-    const target = questions[currentIndex];
-
-    // ✅ 若不是正確開頭，清空並記錯
-    if (!target.startsWith(currentAnswer)) {
-      wrongCount++;
-      input.value = '';
-    }
-  }
-
-  // ✅ 空白鍵或 Enter 判斷答案
-  if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
-    e.preventDefault();
-    checkAnswer();
-
-  //input.value = ''; // ←✅ 強制清空任何殘留空白
-  }
-
-});
-
-
+      if (!questions.length) return;
+      if (arrowMap.hasOwnProperty(e.key)) {
+        e.preventDefault();
+        const symbol = arrowMap[e.key];
+        input.value += symbol;
+        const currentAnswer = input.value;
+        const target = questions[currentIndex];
+        if (!target.startsWith(currentAnswer)) {
+          wrongCount++;
+          input.value = '';
+        }
+      }
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        checkAnswer();
+        input.value = '';
+      }
+    });
 
     function generateQuestion(min, max) {
       const arrows = ['↑', '↓', '←', '→'];
@@ -225,23 +158,22 @@
     }
 
     function checkAnswer() {
-  if (!questions.length) return;
-  const ans = input.value;
-  const target = questions[currentIndex];
-  if (ans === target) {
-    currentIndex++;
-    input.value = '';
-    if (currentIndex >= questions.length) {
-      endGame(true);
-    } else {
-      showQuestion();
+      if (!questions.length) return;
+      const ans = input.value;
+      const target = questions[currentIndex];
+      if (ans === target) {
+        currentIndex++;
+        input.value = '';
+        if (currentIndex >= questions.length) {
+          endGame(true);
+        } else {
+          showQuestion();
+        }
+      } else {
+        wrongCount++;
+        input.value = '';
+      }
     }
-  } else {
-    wrongCount++;
-    input.value = '';
-  }
-}
-
 
     function endGame(success) {
       const duration = Math.floor((Date.now() - startTime) / 1000);
@@ -268,18 +200,77 @@
       historyDiv.innerHTML = '';
     }
 
+    // Canvas 控制區邏輯
+    const canvas = document.getElementById('controlCanvas');
+    const ctx = canvas.getContext('2d');
 
+    function drawPad() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#666';
+      ctx.fillStyle = '#ddd';
+      ctx.lineWidth = 2;
 
-    // 手機用虛擬鍵模擬方向鍵
-function simulateKey(keyName) {
-  const e = new KeyboardEvent('keydown', { key: keyName, code: keyName });
-  document.dispatchEvent(e);
-}
+      // ↑ 上排中央
+      ctx.fillRect(100, 20, 100, 80);
+      ctx.strokeRect(100, 20, 100, 80);
+      ctx.fillStyle = '#000';
+      ctx.font = '40px sans-serif';
+      ctx.fillText('↑', 140, 75);
 
+      // ← 左下
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(20, 110, 80, 80);
+      ctx.strokeRect(20, 110, 80, 80);
+      ctx.fillStyle = '#000';
+      ctx.fillText('←', 50, 165);
 
+      // ↓ 中下
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(110, 110, 80, 80);
+      ctx.strokeRect(110, 110, 80, 80);
+      ctx.fillStyle = '#000';
+      ctx.fillText('↓', 140, 165);
 
+      // → 右下
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(200, 110, 80, 80);
+      ctx.strokeRect(200, 110, 80, 80);
+      ctx.fillStyle = '#000';
+      ctx.fillText('→', 230, 165);
 
+      // ✅ 送出鍵（最下排）
+      ctx.fillStyle = '#fdd';
+      ctx.fillRect(75, 210, 150, 60);
+      ctx.strokeRect(75, 210, 150, 60);
+      ctx.fillStyle = '#000';
+      ctx.fillText('送出', 115, 250);
+    }
 
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (y >= 20 && y <= 100 && x >= 100 && x <= 200) simulateKey('ArrowUp');
+      else if (y >= 110 && y <= 190) {
+        if (x >= 20 && x <= 100) simulateKey('ArrowLeft');
+        else if (x >= 110 && x <= 190) simulateKey('ArrowDown');
+        else if (x >= 200 && x <= 280) simulateKey('ArrowRight');
+      } else if (y >= 210 && y <= 270 && x >= 75 && x <= 225) {
+        simulateKey(' ');
+      }
+    });
+
+    function simulateKey(keyName) {
+      const e = new KeyboardEvent('keydown', {
+        key: keyName,
+        code: keyName === ' ' ? 'Space' : keyName,
+        bubbles: true
+      });
+      document.dispatchEvent(e);
+    }
+
+    drawPad();
   </script>
 </body>
 </html>
