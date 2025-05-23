@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>猜數字幾A幾B</title>
+
+  <!-- CSS：設定基本樣式 -->
+  <style>
+    body 
+    {
+    font-family: sans-serif; 
+    padding: 20px; 
+    word-break: break-word; /* 加這一行讓字遇到邊界會自動換行 */
+    }
+    input { margin-right: 10px; }
+
+    #result {
+    max-width: 100%;        /* 不讓內容超出畫面 */
+    word-wrap: break-word;  /* 如果太長會自動換行 */
+    }
+  </style>
+</head>
+<body>
+  <!-- 標題區域 -->
+  <h2>猜 4 位不重複數字<br>（A為數字對位置對，<br>B為數字對位置不對）</h2>
+
+  <!-- 使用者輸入框與送出按鈕 -->
+  <input type="text" id="guess" maxlength="4">
+  <button onclick="checkGuess()">送出</button>
+  <button onclick="restartGame()">重新開始</button>
+
+
+  <!-- 顯示「猜對了」結果的地方 -->
+  <div id="result"></div>
+
+  <!-- 顯示歷史紀錄 -->
+  <div id="history"></div>
+
+
+  <h3>✏️ 手繪筆記區(不再模擬滑鼠事件)</h3>
+    <canvas id="drawArea" width="300" height="300" style="border:1px solid #000;"></canvas><br>
+    <button onclick="clearCanvas()">清除畫面</button>
+
+
+  <!-- JavaScript：遊戲邏輯 -->
+  <script>
+
+    let guessCount = 0; // 猜的次數
+
+    // 隨機產生 4 個不重複的數字當作答案
+    let answer = generateAnswer();
+
+    function generateAnswer() {
+      let nums = [];
+      while (nums.length < 4) {
+        let n = Math.floor(Math.random() * 10); // 產生 0～9 的亂數
+        if (!nums.includes(n)) nums.push(n);   // 確保不重複才加進去
+      }
+      return nums.join(''); // 回傳字串型式的答案，例如 "7381"
+    }
+
+    // 檢查使用者猜的數字並計算幾A幾B
+    function checkGuess() {
+      const input = document.getElementById('guess').value;
+      guessCount++; // 每猜一次就加一
+
+      // 驗證輸入格式：長度必須是4、且不得有重複數字
+      if (input.length !== 4 || new Set(input).size !== 4) {
+        alert('請輸入 4 個不重複的數字');    //alert會跳出提示視窗
+        return;
+      }
+
+      let A = 0, B = 0;
+
+      // 計算幾A幾B
+      for (let i = 0; i < 4; i++) {
+        if (input[i] === answer[i]) A++;              // 數字與位置都對 → A
+        else if (answer.includes(input[i])) B++;      // 數字對但位置不對 → B
+      }
+
+      // 顯示結果到畫面上
+      const result = `${input} → ${A}A${B}B`;
+      document.getElementById('history').innerHTML += `<div>${result}</div>`;
+
+      // 如果猜對，顯示成功訊息
+      if (A === 4) {
+        document.getElementById('result').innerHTML = `<strong>答對啦！<br>答案是 ${answer}，<br>你總共猜了 ${guessCount} 次！</strong>`;
+
+        // 讓輸入框無法再輸入
+        document.getElementById('guess').disabled = true;
+
+        // 讓送出按鈕也不能再按
+        document.querySelector('button').disabled = true;
+
+      }
+
+      // 每次猜完都清空輸入框
+        document.getElementById('guess').value = '';
+
+    }
+
+
+
+
+    function restartGame() {
+        guessCount = 0;
+
+  // 重新產生答案
+  answer = generateAnswer();
+
+  // 清空輸入框、結果、歷史紀錄
+  document.getElementById('guess').value = '';
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('history').innerHTML = '';
+
+  // 恢復輸入與按鈕功能
+  document.getElementById('guess').disabled = false;
+  document.querySelector('button').disabled = false;
+}
+
+
+
+
+
+
+
+
+
+// 🖌️ 繪圖功能
+const canvas = document.getElementById('drawArea');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
+
+// 手指支援（手機）修正版
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  drawing = true;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!drawing) return;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+});
+
+canvas.addEventListener('touchend', () => {
+  drawing = false;
+});
+
+function startDraw(e) {
+  drawing = true;
+  draw(e);
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+  ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+}
+
+
+
+  </script>
+</body>
+</html>
