@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>舒靜的配對遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #fef6f9;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .menu {
+      margin: 20px 0;
+    }
+    .menu button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background-color: #ffc0cb;
+      cursor: pointer;
+    }
+    .menu button:hover {
+      background-color: #ffa3b2;
+    }
+    #game-board {
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .card {
+      width: 60px;
+      height: 60px;
+      background-color: #fff;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid #ccc;
+    }
+    .card.matched {
+      background-color: #e0ffe0;
+      cursor: default;
+    }
+    .card.face-down {
+      background-color: #ffeef1;
+      font-size: 0;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    .records {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+    .back-home {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #d8b4f8;
+      color: #000;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-home:hover {
+      background-color: #c084fc;
+    }
+  </style>
+</head>
+<body>
+  <h1>舒靜的配對遊戲 🎀</h1>
+  <div class="menu">
+    <button onclick="startGame('3x4')">3x4</button>
+    <button onclick="startGame('4x4')">4x4</button>
+    <button onclick="startGame('6x6')">6x6</button>
+  </div>
+
+  <div id="game-board"></div>
+  <div id="status"></div>
+  <div id="records"></div>
+  <button onclick="clearAllRecords()">🗑️ 清除所有紀錄</button>
+  <br>
+  <a href="index.html" class="back-home">🏠 回首頁</a>
+
+  <script>
+    const emojiSets = {
+      '3x4': ['🐸','🐨','🐶','🐷','🐰','🐱'],
+      '4x4': ['🍎','🍇','🍩','🥑','🍕','🌷','🌈','⛄'],
+      '6x6': ['🍌','🍓','🥝','🍰','🍔','🧁','🎮','🧩','🎈','🌼','⚡','🍃','🌸','🌞','🎨','⏰','🐭','🐧']
+    };
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let startTime = 0;
+    let currentMode = '';
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startGame(mode) {
+      currentMode = mode;
+      const emojis = [...emojiSets[mode], ...emojiSets[mode]];
+      const shuffled = shuffle(emojis);
+      const board = document.getElementById('game-board');
+      const status = document.getElementById('status');
+      board.innerHTML = '';
+      status.innerHTML = '';
+
+      const [cols, rows] = mode.split('x').map(Number);
+      board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+      shuffled.forEach((emoji, index) => {
+        const card = document.createElement('div');
+        card.className = 'card face-down';
+        card.dataset.emoji = emoji;
+        card.addEventListener('click', () => flipCard(card));
+        card.innerText = emoji;
+        board.appendChild(card);
+      });
+
+      startTime = Date.now();
+    }
+
+    function flipCard(card) {
+      if (lockBoard || card.classList.contains('matched') || !card.classList.contains('face-down')) return;
+
+      card.classList.remove('face-down');
+
+      if (!firstCard) {
+        firstCard = card;
+        return;
+      }
+
+      secondCard = card;
+      lockBoard = true;
+
+      if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        resetTurn();
+        checkWin();
+      } else {
+        setTimeout(() => {
+          firstCard.classList.add('face-down');
+          secondCard.classList.add('face-down');
+          resetTurn();
+        }, 600);
+      }
+    }
+
+    function resetTurn() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    function checkWin() {
+      const allCards = document.querySelectorAll('.card');
+      const matchedCards = document.querySelectorAll('.card.matched');
+      if (allCards.length === matchedCards.length) {
+        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('status').innerText = `🎉 恭喜完成！用時 ${timeTaken} 秒。`;
+        saveRecord(currentMode, timeTaken);
+        updateAllRecords();
+      }
+    }
+
+    function saveRecord(mode, time) {
+      const key = `record_${mode}`;
+      let records = JSON.parse(localStorage.getItem(key)) || [];
+      records.push(time);
+      localStorage.setItem(key, JSON.stringify(records));
+    }
+
+    function updateAllRecords() {
+      const recordsDiv = document.getElementById('records');
+      let allRecords = [];
+      for (const mode of Object.keys(emojiSets)) {
+        const key = `record_${mode}`;
+        const records = JSON.parse(localStorage.getItem(key)) || [];
+        records.forEach(time => {
+          allRecords.push(`(${mode}) ${time} 秒`);
+        });
+      }
+      recordsDiv.innerHTML = '<strong>🎯 歷史紀錄：</strong><ul>' +
+        allRecords.map(item => `<li>${item}</li>`).join('') + '</ul>';
+    }
+
+    function clearAllRecords() {
+      for (const mode of Object.keys(emojiSets)) {
+        localStorage.removeItem(`record_${mode}`);
+      }
+      document.getElementById('records').innerHTML = '';
+      document.getElementById('status').innerText = '🗑️ 所有紀錄已清除';
+    }
+  </script>
+
+
+
+
+
+  <!-- 訪客計數器區塊 -->
+<p>👣 有這麼多人來過這裡玩過喔：</p>
+<div id="sfcd8yp7a8f78eadqezw48n6h1gs5brmfp4"></div>
+<script type="text/javascript" src="https://counter4.optistats.ovh/private/counter.js?c=d8yp7a8f78eadqezw48n6h1gs5brmfp4&down=async" async></script>
+<noscript>
+  <a href="https://www.freecounterstat.com" title="hits counter">
+    <img src="https://counter4.optistats.ovh/private/freecounterstat.php?c=d8yp7a8f78eadqezw48n6h1gs5brmfp4" border="0" title="hits counter" alt="hits counter">
+  </a>
+</noscript>
+
+
+
+
+
+</body>
+</html>

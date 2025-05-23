@@ -18,6 +18,22 @@
     max-width: 100%;        /* 不讓內容超出畫面 */
     word-wrap: break-word;  /* 如果太長會自動換行 */
     }
+
+.back-home {
+  margin-top: 20px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #d8b4f8;
+  color: #000;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+}
+.back-home:hover {
+  background-color: #c084fc;
+}
+
+
   </style>
 </head>
 <body>
@@ -40,6 +56,7 @@
   <h3>✏️ 手繪筆記區</h3>
     <canvas id="drawArea" width="300" height="300" style="border:1px solid #000;"></canvas><br>
     <button onclick="clearCanvas()">清除畫面</button>
+    <a href="index.html" class="back-home">🏠 回首頁</a>
 
 
   <!-- JavaScript：遊戲邏輯 -->
