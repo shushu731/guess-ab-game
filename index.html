@@ -37,7 +37,7 @@
   <div id="history"></div>
 
 
-  <h3>✏️ 手繪筆記區(更新手指位置不同步)</h3>
+  <h3>✏️ 手繪筆記區(不再模擬滑鼠事件)</h3>
     <canvas id="drawArea" width="300" height="300" style="border:1px solid #000;"></canvas><br>
     <button onclick="clearCanvas()">清除畫面</button>
 
@@ -136,31 +136,34 @@ canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('mouseup', () => drawing = false);
 canvas.addEventListener('mouseleave', () => drawing = false);
 
-// 手指支援（手機）
+// 手指支援（手機）修正版
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
+  drawing = true;
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
-  const x = touch.pageX - rect.left - window.scrollX;
-  const y = touch.pageY - rect.top - window.scrollY;
-  canvas.dispatchEvent(new MouseEvent("mousedown", {
-    clientX: x,
-    clientY: y
-  }));
-});
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  const touch = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = touch.pageX - rect.left - window.scrollX;
-  const y = touch.pageY - rect.top - window.scrollY;
-  canvas.dispatchEvent(new MouseEvent("mousemove", {
-    clientX: x,
-    clientY: y
-  }));
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
 });
 
-canvas.addEventListener('touchend', () => drawing = false);
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!drawing) return;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+});
+
+canvas.addEventListener('touchend', () => {
+  drawing = false;
+});
 
 function startDraw(e) {
   drawing = true;
