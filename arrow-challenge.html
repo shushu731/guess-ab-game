@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>箭頭挑戰遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #fefefe;
+    }
+    input {
+      width: 60px;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 5px 12px;
+      font-size: 16px;
+    }
+    #question {
+      font-size: 32px;
+      margin: 20px 0;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    #history {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .back-home {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #d8b4f8;
+      color: #000;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-home:hover {
+      background-color: #c084fc;
+    }
+
+    /* 手機版控制按鈕區 */
+    .mobile-controls {
+      display: none; /* 預設不顯示，只有手機顯示 */
+      margin-top: 20px;
+    }
+
+    .mobile-controls button {
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      margin: 5px;
+      border-radius: 8px;
+    }
+
+    /* 上下左右排列 */
+    .mobile-direction {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* 答題鍵 */
+    .submit-btn {
+      margin-top: 10px;
+      width: 100%;
+      font-size: 18px;
+      padding: 10px;
+      background-color: #fdd;
+      border-radius: 6px;
+      border: none;
+    }
+
+    /* ✅ 僅在手機寬度顯示 */
+    @media (max-width: 768px) {
+    .mobile-controls {
+      display: block;
+    }
+    }
+
+
+  </style>
+</head>
+<body>
+  <h2>🎯 箭頭挑戰遊戲</h2>
+  <div>
+    最小箭頭數：<input type="number" id="minLen" value="3" min="3">
+    最大箭頭數：<input type="number" id="maxLen" value="7" min="3">
+    題數：<input type="number" id="count" value="10" min="1">
+    <button onclick="startGame()">開始</button>
+    <button onclick="giveUp()">放棄</button>
+    <button onclick="clearHistory()">清除紀錄</button>
+    <a href="index.html" class="back-home">🏠 回首頁</a>
+    
+  </div>
+
+  <div id="question"></div>
+  <input id="answerInput" type="text" placeholder="輸入↑↓←→" autocomplete="off" style="width: 300px; font-size: 24px;">
+  <div id="result"></div>
+  <div id="history"></div>
+
+
+
+
+
+<div class="mobile-controls">
+  <div class="mobile-direction">
+    <button onclick="simulateKey('ArrowUp')">↑</button>
+  </div>
+  <div class="mobile-direction">
+    <button onclick="simulateKey('ArrowLeft')">←</button>
+    <button onclick="simulateKey('ArrowDown')">↓</button>
+    <button onclick="simulateKey('ArrowRight')">→</button>
+  </div>
+  <button class="submit-btn" onclick="checkAnswer()">✅ 送出</button>
+</div>
+
+
+
+
+  <script>
+    const arrowMap = {
+      ArrowUp: '↑',
+      ArrowDown: '↓',
+      ArrowLeft: '←',
+      ArrowRight: '→',
+      w: '↑',
+      s: '↓',
+      a: '←',
+      d: '→'
+    };
+
+    let questions = [];
+    let currentIndex = 0;
+    let wrongCount = 0;
+    let startTime = null;
+    let totalQuestions = 0;
+
+    const input = document.getElementById('answerInput');
+    const questionDiv = document.getElementById('question');
+    const resultDiv = document.getElementById('result');
+    const historyDiv = document.getElementById('history');
+
+    document.addEventListener('keydown', e => {
+  if (!questions.length) return;
+
+  // ✅ 按方向鍵或 WASD 時處理輸入
+  if (arrowMap.hasOwnProperty(e.key)) {
+    e.preventDefault(); // 先阻止預設行為
+    const symbol = arrowMap[e.key];
+    input.value += symbol;
+
+    const currentAnswer = input.value;
+    const target = questions[currentIndex];
+
+    // ✅ 若不是正確開頭，清空並記錯
+    if (!target.startsWith(currentAnswer)) {
+      wrongCount++;
+      input.value = '';
+    }
+  }
+
+  // ✅ 空白鍵或 Enter 判斷答案
+  if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
+    e.preventDefault();
+    checkAnswer();
+
+  //input.value = ''; // ←✅ 強制清空任何殘留空白
+  }
+
+});
+
+
+
+    function generateQuestion(min, max) {
+      const arrows = ['↑', '↓', '←', '→'];
+      const len = Math.floor(Math.random() * (max - min + 1)) + min;
+      let str = '';
+      for (let i = 0; i < len; i++) {
+        str += arrows[Math.floor(Math.random() * arrows.length)];
+      }
+      return str;
+    }
+
+    function startGame() {
+      const min = parseInt(document.getElementById('minLen').value);
+      const max = parseInt(document.getElementById('maxLen').value);
+      const count = parseInt(document.getElementById('count').value);
+
+      if (min < 3 || max < 3 || count < 1 || max < min) {
+        alert('請確認輸入正確（最小/最大 ≥ 3，最大不得小於最小，題數 ≥ 1）');
+        return;
+      }
+
+      questions = Array.from({ length: count }, () => generateQuestion(min, max));
+      totalQuestions = count;
+      currentIndex = 0;
+      wrongCount = 0;
+      startTime = Date.now();
+      input.value = '';
+      input.focus();
+      showQuestion();
+      resultDiv.textContent = '';
+    }
+
+    function showQuestion() {
+      questionDiv.textContent = questions[currentIndex] || '';
+    }
+
+    function checkAnswer() {
+  if (!questions.length) return;
+  const ans = input.value;
+  const target = questions[currentIndex];
+  if (ans === target) {
+    currentIndex++;
+    input.value = '';
+    if (currentIndex >= questions.length) {
+      endGame(true);
+    } else {
+      showQuestion();
+    }
+  } else {
+    wrongCount++;
+    input.value = '';
+  }
+}
+
+
+    function endGame(success) {
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      const done = success ? totalQuestions : currentIndex;
+      const msg = success
+        ? `(共 ${totalQuestions} 題) 錯誤 ${wrongCount} 次　花費 ${duration} 秒`
+        : `放棄：共 ${totalQuestions} 題，完成 ${done} 題，錯誤 ${wrongCount} 次　花費 ${duration} 秒`;
+
+      const div = document.createElement('div');
+      div.textContent = msg;
+      historyDiv.appendChild(div);
+
+      questions = [];
+      questionDiv.textContent = '';
+      input.value = '';
+    }
+
+    function giveUp() {
+      if (!questions.length) return;
+      endGame(false);
+    }
+
+    function clearHistory() {
+      historyDiv.innerHTML = '';
+    }
+
+
+
+    // 手機用虛擬鍵模擬方向鍵
+function simulateKey(keyName) {
+  const e = new KeyboardEvent('keydown', { key: keyName, code: keyName });
+  document.dispatchEvent(e);
+}
+
+
+
+
+
+  </script>
+</body>
+</html>
