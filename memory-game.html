@@ -6,15 +6,17 @@
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
       background-color: #fef6f9;
       padding: 20px;
+      text-align: left;
     }
     h1 {
       margin-bottom: 10px;
+       text-align: left;
     }
     .menu {
       margin: 20px 0;
+      text-align: left;
     }
     .menu button {
       padding: 10px 20px;
@@ -31,9 +33,13 @@
     #game-board {
       display: grid;
       gap: 10px;
-      justify-content: center;
-      margin: 20px auto;
+      justify-content: start; /* 靠左 */
+      align-content: start;   /* 靠上 */
+      margin: 20px 0 0 0;     /* 上右下左，左邊不留空 */
+      width: fit-content;     /* 只佔卡片大小，不要被撐開 */
     }
+
+
     .card {
       width: 60px;
       height: 60px;
@@ -65,6 +71,7 @@
       color: #666;
     }
     .back-home {
+      margin-left: 0;
       margin-top: 20px;
       display: inline-block;
       padding: 8px 16px;
@@ -91,6 +98,7 @@
   <div id="status"></div>
   <div id="records"></div>
   <button onclick="clearAllRecords()">🗑️ 清除所有紀錄</button>
+  <button onclick="giveUp()">❌ 放棄這局</button>
   <br>
   <a href="index.html" class="back-home">🏠 回首頁</a>
 
@@ -106,6 +114,7 @@
     let lockBoard = false;
     let startTime = 0;
     let currentMode = '';
+    let gameInProgress = false;
 
     function shuffle(array) {
       return array.sort(() => Math.random() - 0.5);
@@ -133,6 +142,7 @@
       });
 
       startTime = Date.now();
+      gameInProgress = true;
     }
 
     function flipCard(card) {
@@ -175,7 +185,17 @@
         document.getElementById('status').innerText = `🎉 恭喜完成！用時 ${timeTaken} 秒。`;
         saveRecord(currentMode, timeTaken);
         updateAllRecords();
+        gameInProgress = false;
       }
+    }
+
+    function giveUp() {
+      if (!gameInProgress) return;
+      const board = document.getElementById('game-board');
+      const cards = board.querySelectorAll('.card');
+      cards.forEach(card => card.classList.remove('face-down'));
+      document.getElementById('status').innerText = '❌ 已放棄本局，全部翻開。';
+      gameInProgress = false;
     }
 
     function saveRecord(mode, time) {
@@ -207,24 +227,5 @@
       document.getElementById('status').innerText = '🗑️ 所有紀錄已清除';
     }
   </script>
-
-
-
-
-
-  <!-- 訪客計數器區塊 -->
-<p>👣 有這麼多人來過這裡玩過喔：</p>
-<div id="sfcd8yp7a8f78eadqezw48n6h1gs5brmfp4"></div>
-<script type="text/javascript" src="https://counter4.optistats.ovh/private/counter.js?c=d8yp7a8f78eadqezw48n6h1gs5brmfp4&down=async" async></script>
-<noscript>
-  <a href="https://www.freecounterstat.com" title="hits counter">
-    <img src="https://counter4.optistats.ovh/private/freecounterstat.php?c=d8yp7a8f78eadqezw48n6h1gs5brmfp4" border="0" title="hits counter" alt="hits counter">
-  </a>
-</noscript>
-
-
-
-
-
 </body>
 </html>
